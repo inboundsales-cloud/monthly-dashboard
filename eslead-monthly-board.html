@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月間ボード</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#e8e8ec;display:flex;align-items:center;justify-content:center;font-family:'Inter','Noto Sans JP',sans-serif}
+
+:root{
+  --bg:#f7f7f9;
+  --bg-header:#ffffff;
+  --bg-card:#ffffff;
+  --bg-card-head:#1a2744;   /* ネイビー */
+  --bg-sub:#f2f3f7;
+  --bg-col-hd:#eef0f6;
+  --accent:#1a2744;         /* ネイビー */
+  --accent2:#c8a040;        /* ゴールド */
+  --accent2-light:#f5ecd4;
+  --green:#2e9e68;
+  --green-bg:#edf7f2;
+  --red:#d44;
+  --red-bg:#fdf0f0;
+  --blue:#2c72c7;
+  --blue-bg:#eef4fd;
+  --text-primary:#1a1a2e;
+  --text-secondary:#5a5a72;
+  --text-muted:#9898aa;
+  --border:#e4e4ee;
+  --border2:#d0d0e0;
+  --shadow:0 2px 12px rgba(26,39,68,0.07);
+  --shadow-lg:0 4px 24px rgba(26,39,68,0.1);
+}
+
+#app{width:100vw;height:56.25vw;max-height:100vh;max-width:177.78vh;display:flex;flex-direction:column;overflow:hidden;font-size:clamp(7px,0.85vw,12px);background:var(--bg)}
+
+/* 部タブ */
+#tab-bar{display:flex;background:var(--accent);flex-shrink:0}
+.tab{flex:1;padding:0.4em 0;text-align:center;font-weight:700;font-size:1em;color:rgba(255,255,255,0.45);cursor:pointer;border-right:1px solid rgba(255,255,255,0.1);transition:all 0.18s;letter-spacing:0.1em}
+.tab:last-child{border-right:none}
+.tab.active{color:#fff;background:rgba(255,255,255,0.12);border-bottom:2px solid var(--accent2)}
+.tab:not(.active):hover{color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.06)}
+
+/* ボード */
+#board{display:flex;flex-direction:column;flex:1;overflow:hidden;background:var(--bg)}
+
+/* ヘッダー */
+#header{
+  background:var(--bg-header);
+  border-bottom:1px solid var(--border);
+  padding:0.32em 1.2em;
+  display:flex;align-items:center;gap:1.1em;flex-shrink:0;
+  box-shadow:0 1px 8px rgba(26,39,68,0.06);
+}
+
+.hdr-month{
+  font-size:2.6em;font-weight:900;
+  color:var(--accent);font-family:'Inter',sans-serif;
+  letter-spacing:-0.02em;
+}
+
+.hdr-div{width:1px;height:2.6em;background:var(--border2);margin:0 0.2em}
+
+.progress-block{display:flex;flex-direction:column;align-items:center;gap:0.06em}
+.progress-label{font-size:0.63em;color:var(--text-muted);font-weight:600;letter-spacing:0.14em;text-transform:uppercase}
+.progress-nums{display:flex;align-items:baseline;gap:0.12em}
+.p-current{font-size:2.1em;font-weight:900;color:var(--accent);font-family:'Inter',sans-serif;line-height:1}
+.p-current.gold{color:var(--accent2)}
+.p-current.green{color:var(--green)}
+.p-sep{font-size:0.95em;color:var(--text-muted);font-weight:300;margin:0 0.05em}
+.p-target{font-size:1.25em;font-weight:500;color:var(--text-secondary);font-family:'Inter',sans-serif}
+.p-unit{font-size:0.7em;color:var(--text-muted);margin-left:0.1em}
+
+.hdr-bucho{font-size:0.85em;color:var(--text-secondary)}
+.hdr-bucho strong{color:var(--accent);font-weight:700}
+
+.hdr-btns{margin-left:auto;display:flex;gap:0.5em;align-items:center}
+.hdr-btn{
+  font-size:0.73em;padding:0.34em 0.85em;
+  border:1px solid var(--border2);border-radius:5px;
+  background:#fff;cursor:pointer;font-weight:600;
+  color:var(--text-secondary);white-space:nowrap;transition:all 0.15s;
+  letter-spacing:0.04em;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
+}
+.hdr-btn:hover{background:var(--bg-sub);color:var(--accent);border-color:var(--accent)}
+.hdr-btn.danger{color:var(--red);border-color:#f0c8c8;background:#fff}
+.hdr-btn.danger:hover{background:var(--red-bg);border-color:var(--red)}
+
+/* メインエリア */
+#main-area{display:flex;flex:1;overflow:hidden;padding:0.55em 0.65em 0 0.65em;gap:0.45em}
+#courses-wrap{display:flex;flex:1;gap:0.45em;min-width:0}
+
+/* 課カード */
+.course{
+  flex:1;display:flex;flex-direction:column;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;min-width:0;
+  box-shadow:var(--shadow);
+  transition:box-shadow 0.2s;
+}
+.course:hover{box-shadow:var(--shadow-lg)}
+
+.course-header{
+  background:var(--bg-card-head);
+  color:#fff;
+  text-align:center;font-weight:800;font-size:1.05em;
+  padding:0.26em 0.2em;flex-shrink:0;
+  letter-spacing:0.1em;
+}
+
+.course-meta{
+  text-align:center;padding:0.11em 0;
+  border-bottom:1px solid var(--border);
+  background:var(--bg-sub);flex-shrink:0;
+  font-weight:600;font-size:0.88em;color:var(--text-secondary);
+}
+.course-meta span{color:var(--accent);font-weight:800}
+
+/* 列ヘッダー */
+.col-hd{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);background:var(--bg-col-hd);flex-shrink:0}
+.col-hd>div{text-align:center;padding:0.1em 0;font-size:0.67em;color:var(--text-muted);font-weight:700;border-right:1px solid var(--border);letter-spacing:0.08em;text-transform:uppercase}
+.col-hd>div:first-child{border-right:1px solid var(--border)}
+.col-hd>div:last-child{border-right:none}
+.col-hd-ap{display:flex;flex-direction:column;border-right:none}
+.col-hd-ap .ap-top{font-size:0.64em;color:var(--text-muted);border-bottom:1px solid var(--border);padding:0.06em 0;flex:1;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:0.06em}
+.col-hd-ap .ap-bot{font-size:0.64em;color:var(--blue);padding:0.06em 0;flex:1;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:0.06em}
+
+/* メンバー行 */
+.members{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.mrow{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:stretch;flex:1;min-height:0}
+.mrow:last-child{border-bottom:none}
+.mrow:hover{background:#fafbff}
+
+/* 名前セル */
+.mname{
+  padding:0.1em 0.28em;font-weight:700;font-size:0.82em;
+  display:flex;align-items:center;overflow:hidden;
+  white-space:nowrap;margin:2px 2px 2px 3px;border-radius:4px;
+  letter-spacing:0.02em;
+}
+
+/* 役職カラー */
+.role-kacho      {background:linear-gradient(135deg,#d07000,#e88020);color:#fff}
+.role-kakarichou {background:linear-gradient(135deg,#c83070,#e05590);color:#fff}
+.role-shunin     {background:linear-gradient(135deg,#1a6ab0,#2c88cc);color:#fff}
+.role-shain      {background:linear-gradient(135deg,#6a6a7a,#888898);color:#fff}
+.role-shinnyuu   {background:linear-gradient(135deg,#2e9040,#48b058);color:#fff}
+
+/* カウントセル */
+.ccell{display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid var(--border);gap:0.15em;padding:0.12em 0}
+.cnum{font-size:1.25em;font-weight:800;line-height:1;color:var(--text-primary);font-family:'Inter',sans-serif}
+.cnum.g{color:var(--green)}
+.cnum.r{color:var(--red)}
+.vcol{display:flex;flex-direction:column;gap:2px}
+.bp,.bm{
+  width:2em;height:1.05em;font-size:0.7em;font-weight:700;
+  border:none;border-radius:3px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  user-select:none;transition:all 0.1s;
+}
+.bp{background:var(--green-bg);color:var(--green);border:1px solid #b8e8d0}
+.bp:hover{background:#d5f0e5}
+.bp:active{background:#b8e8d0}
+.bm{background:var(--red-bg);color:var(--red);border:1px solid #f0cccc}
+.bm:hover{background:#fadddd}
+.bm:active{background:#f0cccc}
+
+/* AP複合セル */
+.ap-cell{display:flex;flex-direction:column;border-left:1px solid var(--border)}
+.ap-half{display:flex;align-items:center;justify-content:center;flex:1;gap:0.15em;padding:0.1em}
+.ap-half.top{border-bottom:1px solid var(--border)}
+.ap-num{font-size:1em;font-weight:800;line-height:1;color:var(--text-primary);min-width:1em;text-align:center;font-family:'Inter',sans-serif}
+.ap-num.b{color:var(--blue)}
+.ap-vcol{display:flex;flex-direction:column;gap:2px}
+.ap-bp,.ap-bm{
+  width:1.75em;height:0.92em;font-size:0.67em;font-weight:700;
+  border:none;border-radius:3px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;user-select:none;transition:all 0.1s;
+}
+.ap-bp{background:var(--green-bg);color:var(--green);border:1px solid #b8e8d0}
+.ap-bp:hover{background:#d5f0e5}
+.ap-bm{background:var(--red-bg);color:var(--red);border:1px solid #f0cccc}
+.ap-bm:hover{background:#fadddd}
+
+/* 下部集計エリア */
+#footer-area{
+  display:flex;flex-shrink:0;
+  padding:0.4em 0.65em 0.55em 0.65em;
+  gap:0.45em;background:var(--bg);
+  border-top:1px solid var(--border);
+}
+#footer-courses{display:flex;flex:1;gap:0.45em}
+.f-course{
+  flex:1;background:#fff;
+  border:1px solid var(--border);
+  border-radius:6px;overflow:hidden;
+  display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;
+  box-shadow:0 1px 5px rgba(26,39,68,0.05);
+}
+.f-name-cell{
+  background:var(--bg-col-hd);
+  border-right:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.62em;color:var(--text-muted);font-weight:700;
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+.f-cell{
+  text-align:center;padding:0.2em 0;font-size:1.08em;font-weight:800;
+  color:var(--text-primary);border-right:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;
+}
+.f-cell:last-child{border-right:none}
+.f-cell.g{color:var(--green)}
+.f-cell.r{color:var(--red)}
+
+/* ===== モーダル ===== */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,39,68,0.45);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+#modal-overlay.open{display:flex}
+#modal{
+  background:#fff;border:1px solid var(--border);
+  border-radius:10px;width:92vw;max-width:960px;max-height:88vh;
+  display:flex;flex-direction:column;overflow:hidden;font-size:14px;
+  box-shadow:0 20px 60px rgba(26,39,68,0.18);
+}
+#modal-head{
+  background:var(--accent);color:#fff;
+  padding:0.75em 1.1em;font-weight:700;font-size:1.05em;
+  flex-shrink:0;display:flex;justify-content:space-between;align-items:center;
+  letter-spacing:0.08em;
+}
+#modal-body{overflow-y:auto;padding:1.1em;flex:1;background:#fff;color:var(--text-primary)}
+#modal-foot{padding:0.65em 1.1em;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.6em;flex-shrink:0;background:#fff}
+.modal-btn{
+  padding:0.4em 1.2em;border-radius:5px;border:1px solid var(--border2);
+  cursor:pointer;font-size:0.93em;background:#fff;color:var(--text-secondary);transition:all 0.15s;
+}
+.modal-btn:hover{background:var(--bg-sub);color:var(--accent);border-color:var(--accent)}
+.modal-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+.modal-btn.primary:hover{background:#243460;box-shadow:0 2px 10px rgba(26,39,68,0.25)}
+#modal-dept-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:1em}
+.mdtab{padding:0.42em 1.25em;cursor:pointer;font-weight:600;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;letter-spacing:0.06em}
+.mdtab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.s-section{margin-bottom:1.1em}
+.s-title{font-weight:700;font-size:0.93em;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:0.28em;margin-bottom:0.55em;letter-spacing:0.06em}
+.s-row{display:flex;align-items:center;gap:0.55em;margin-bottom:0.4em;flex-wrap:wrap}
+.s-row label{font-size:0.87em;color:var(--text-secondary);min-width:10em}
+.s-row input[type=text],.s-row input[type=number]{
+  border:1px solid var(--border2);border-radius:4px;
+  padding:0.26em 0.48em;font-size:0.9em;width:6em;
+  background:#fff;color:var(--text-primary);
+  font-family:'Inter','Noto Sans JP',sans-serif;
+  transition:border-color 0.15s;
+}
+.s-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(26,39,68,0.1)}
+.s-row input.wide{width:11em}
+.s-note{font-size:0.75em;color:var(--text-muted);margin-left:0.2em}
+.course-edit-block{border:1px solid var(--border);border-radius:6px;margin-bottom:0.75em;overflow:hidden}
+.course-edit-head{background:var(--bg-sub);padding:0.4em 0.7em;font-weight:700;font-size:0.92em;display:flex;align-items:center;gap:0.5em;flex-wrap:wrap;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+.course-edit-head input{border:1px solid var(--border2);border-radius:4px;padding:0.2em 0.42em;font-size:0.88em;background:#fff;color:var(--text-primary)}
+.course-edit-head input:focus{outline:none;border-color:var(--accent)}
+.course-edit-head input.cn{width:7em}
+.course-edit-head input.ct{width:3.2em}
+.member-list{padding:0.4em 0.7em;display:flex;flex-direction:column;gap:0.3em;background:#fff}
+.member-edit-row{display:flex;align-items:center;gap:0.42em}
+.member-edit-row input[type=text]{border:1px solid var(--border2);border-radius:4px;padding:0.2em 0.42em;font-size:0.87em;width:7em;background:#fff;color:var(--text-primary)}
+.member-edit-row input[type=text]:focus{outline:none;border-color:var(--accent)}
+.member-edit-row select{border:1px solid var(--border2);border-radius:4px;padding:0.2em 0.3em;font-size:0.84em;background:#fff;color:var(--text-primary)}
+.role-preview{display:inline-block;padding:0.12em 0.55em;border-radius:4px;font-size:0.8em;font-weight:700;color:#fff;min-width:5.5em;text-align:center}
+.btn-del-member{background:var(--red-bg);border:1px solid #f0cccc;border-radius:4px;color:var(--red);cursor:pointer;padding:0.15em 0.45em;font-size:0.8em;transition:all 0.1s}
+.btn-del-member:hover{background:#fadddd}
+.btn-add-member{margin-top:0.3em;background:var(--green-bg);border:1px solid #b8e8d0;border-radius:4px;color:var(--green);cursor:pointer;padding:0.2em 0.6em;font-size:0.8em;transition:all 0.1s}
+.btn-add-member:hover{background:#d5f0e5}
+#modal-body::-webkit-scrollbar{width:4px}
+#modal-body::-webkit-scrollbar-track{background:var(--bg-sub)}
+#modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="tab-bar">
+    <div class="tab active" onclick="switchDept(0)">1部</div>
+    <div class="tab" onclick="switchDept(1)">2部</div>
+    <div class="tab" onclick="switchDept(2)">3部</div>
+  </div>
+  <div id="board">
+    <div id="header">
+      <div class="hdr-month" id="hdr-month"></div>
+      <div class="hdr-div"></div>
+      <div class="progress-block">
+        <div class="progress-label">Total</div>
+        <div class="progress-nums">
+          <span class="p-current" id="p-total-cur">0</span>
+          <span class="p-sep">/</span>
+          <span class="p-target" id="p-total-tgt">0</span>
+          <span class="p-unit">本</span>
+        </div>
+      </div>
+      <div class="hdr-div"></div>
+      <div class="progress-block">
+        <div class="progress-label" style="color:var(--green)">New</div>
+        <div class="progress-nums">
+          <span class="p-current green" id="p-shinki-cur">0</span>
+          <span class="p-sep">/</span>
+          <span class="p-target" id="p-shinki-tgt">0</span>
+          <span class="p-unit">本</span>
+        </div>
+      </div>
+      <div class="hdr-div"></div>
+      <div class="hdr-bucho">部長：<strong id="hdr-bucho"></strong></div>
+      <div class="hdr-btns">
+        <button class="hdr-btn" onclick="openSettings()">⚙ 設定</button>
+        <button class="hdr-btn danger" onclick="resetAll()">月次リセット</button>
+      </div>
+    </div>
+
+    <div id="main-area">
+      <div id="courses-wrap"></div>
+    </div>
+    <div id="footer-area">
+      <div id="footer-courses"></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-head">
+      <span>⚙ 設定</span>
+      <button class="modal-btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,0.3);padding:0.2em 0.6em" onclick="closeSettings()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-foot">
+      <button class="modal-btn" onclick="closeSettings()">キャンセル</button>
+      <button class="modal-btn primary" onclick="saveSettings()">保存して反映</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SKEY='board_settings_v9';
+const DKEY='board_data_v9';
+const ROLES=[
+  {key:'kacho',      label:'課長',          bg:'linear-gradient(135deg,#d07000,#e88020)',color:'#fff'},
+  {key:'kakarichou', label:'係長',          bg:'linear-gradient(135deg,#c83070,#e05590)',color:'#fff'},
+  {key:'shunin',     label:'主任',          bg:'linear-gradient(135deg,#1a6ab0,#2c88cc)',color:'#fff'},
+  {key:'shain',      label:'社員(2年目以上)',bg:'linear-gradient(135deg,#6a6a7a,#888898)',color:'#fff'},
+  {key:'shinnyuu',   label:'新入社員',      bg:'linear-gradient(135deg,#2e9040,#48b058)',color:'#fff'},
+];
+const ROLE_MAP=Object.fromEntries(ROLES.map(r=>[r.key,r]));
+
+function emptyDept(name){
+  return {deptName:name,month:'5月',totalGoal:0,shinkiGoal:0,bucho:'',totalAdj:0,shinkiAdj:0,
+    courses:[
+      {name:'課A',target:0,members:[{name:'',role:'shain'}]},
+      {name:'課B',target:0,members:[{name:'',role:'shain'}]},
+      {name:'課C',target:0,members:[{name:'',role:'shain'}]},
+    ]};
+}
+const DEFAULT=[
+  {deptName:'1部',month:'5月',totalGoal:47,shinkiGoal:28,bucho:'大場',totalAdj:0,shinkiAdj:0,
+   courses:[
+    {name:'川崎課',target:12,members:[
+      {name:'川崎',role:'kacho'},{name:'田新',role:'shain'},{name:'福平',role:'shain'},
+      {name:'石川郡',role:'shain'},{name:'松見',role:'shain'},{name:'白鷺',role:'shain'},
+      {name:'大竹',role:'shain'},{name:'川口',role:'shain'},{name:'小山',role:'shain'}]},
+    {name:'依田課',target:10,members:[
+      {name:'依田',role:'kacho'},{name:'安田',role:'shain'},{name:'永岡',role:'shain'},
+      {name:'樽林',role:'shain'},{name:'都築',role:'shain'},{name:'若田',role:'shain'},
+      {name:'阿部',role:'shain'},{name:'金澤',role:'shain'},{name:'吉田翔',role:'shain'}]},
+    {name:'井岡課',target:10,members:[
+      {name:'井岡',role:'kacho'},{name:'宮田',role:'shain'},{name:'清家',role:'shain'},
+      {name:'宮部',role:'shain'},{name:'住田',role:'shain'},{name:'河',role:'shain'},
+      {name:'伊藤洋',role:'shain'},{name:'川脇',role:'shain'},{name:'谷',role:'shain'}]},
+    {name:'宮下課',target:10,members:[
+      {name:'宮下',role:'kacho'},{name:'高田',role:'shain'},{name:'横瀬',role:'shain'},
+      {name:'石田',role:'shain'},{name:'川畑優',role:'shain'},{name:'松永',role:'shain'},
+      {name:'岩田',role:'shain'},{name:'河江',role:'shain'},{name:'畑',role:'shain'}]},
+    {name:'松浦課',target:6,members:[
+      {name:'松浦',role:'kacho'},{name:'黒木',role:'shain'},{name:'斉藤',role:'shain'},
+      {name:'山元',role:'shain'},{name:'山内',role:'shain'},{name:'渡辺',role:'shain'},
+      {name:'村田光',role:'shain'}]},
+    {name:'土居課',target:6,members:[
+      {name:'土居',role:'kacho'},{name:'永田',role:'shain'},{name:'松島',role:'shain'},
+      {name:'山中',role:'shain'},{name:'川越',role:'shain'},{name:'塩沢',role:'shain'},
+      {name:'山田紘',role:'shain'}]}
+  ]},
+  emptyDept('2部'),emptyDept('3部')
+];
+
+let settings,data,currentDept=0,modalDept=0,tempMembers={};
+try{settings=JSON.parse(localStorage.getItem(SKEY));if(!settings||settings.length!==3)throw 0;}catch(e){settings=JSON.parse(JSON.stringify(DEFAULT));}
+try{data=JSON.parse(localStorage.getItem(DKEY))||{};}catch(e){data={};}
+
+function get(d,c,m,t){return(data[d]&&data[d][c]&&data[d][c][m]&&data[d][c][m][t])||0;}
+function setVal(d,c,m,t,v){if(!data[d])data[d]={};if(!data[d][c])data[d][c]={};if(!data[d][c][m])data[d][c][m]={};data[d][c][m][t]=Math.max(0,v);try{localStorage.setItem(DKEY,JSON.stringify(data));}catch(e){}}
+function saveSettingsStore(){try{localStorage.setItem(SKEY,JSON.stringify(settings));}catch(e){}}
+function cSum(d,c,t){return(settings[d].courses[c]?.members||[]).reduce((s,_,m)=>s+get(d,c,m,t),0);}
+function allSum(d,t){return settings[d].courses.reduce((s,_,c)=>s+cSum(d,c,t),0);}
+function fmt(n){return Number.isInteger(n)?String(n):n.toFixed(1);}
+
+function updateProgress(){
+  const s=settings[currentDept];
+  document.getElementById('p-total-cur').textContent=fmt(allSum(currentDept,'keiyaku')+(s.totalAdj||0));
+  document.getElementById('p-total-tgt').textContent=fmt(s.totalGoal);
+  document.getElementById('p-shinki-cur').textContent=fmt(allSum(currentDept,'shinki')+(s.shinkiAdj||0));
+  document.getElementById('p-shinki-tgt').textContent=fmt(s.shinkiGoal);
+}
+
+window.switchDept=function(d){currentDept=d;document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',i===d));renderBoard();};
+window.bump=function(c,m,t,delta){
+  setVal(currentDept,c,m,t,get(currentDept,c,m,t)+delta);
+  document.getElementById(`n-${c}-${m}-${t}`).textContent=get(currentDept,c,m,t);
+  const fEl=document.getElementById(`f-${t}-${c}`);if(fEl)fEl.textContent=cSum(currentDept,c,t);
+  if(t==='ap'||t==='zoom'){const fa=document.getElementById(`fap-${c}`);if(fa)fa.textContent=cSum(currentDept,c,'ap')+cSum(currentDept,c,'zoom');}
+  updateProgress();
+};
+window.resetAll=function(){
+  if(!confirm(`${settings[currentDept].deptName}のカウントをリセットしますか？`))return;
+  data[currentDept]={};try{localStorage.setItem(DKEY,JSON.stringify(data));}catch(e){}renderBoard();
+};
+
+function renderBoard(){
+  const s=settings[currentDept];
+  document.getElementById('hdr-month').textContent=s.month;
+  document.getElementById('hdr-bucho').textContent=s.bucho;
+  updateProgress();
+  const wrap=document.getElementById('courses-wrap');
+  wrap.innerHTML='';
+  s.courses.forEach((course,c)=>{
+    const div=document.createElement('div');div.className='course';
+    const rows=(course.members||[]).map((m,mi)=>`
+      <div class="mrow">
+        <div class="mname" style="background:${ROLE_MAP[m.role]?.bg||ROLE_MAP.shain.bg};color:#fff">${m.name}</div>
+        <div class="ccell"><span class="cnum" id="n-${c}-${mi}-keiyaku">${get(currentDept,c,mi,'keiyaku')}</span><div class="vcol"><button class="bp" onclick="bump(${c},${mi},'keiyaku',1)">＋</button><button class="bm" onclick="bump(${c},${mi},'keiyaku',-1)">－</button></div></div>
+        <div class="ccell"><span class="cnum g" id="n-${c}-${mi}-shinki">${get(currentDept,c,mi,'shinki')}</span><div class="vcol"><button class="bp" onclick="bump(${c},${mi},'shinki',1)">＋</button><button class="bm" onclick="bump(${c},${mi},'shinki',-1)">－</button></div></div>
+        <div class="ccell"><span class="cnum r" id="n-${c}-${mi}-kaiyaku">${get(currentDept,c,mi,'kaiyaku')}</span><div class="vcol"><button class="bp" onclick="bump(${c},${mi},'kaiyaku',1)">＋</button><button class="bm" onclick="bump(${c},${mi},'kaiyaku',-1)">－</button></div></div>
+        <div class="ap-cell">
+          <div class="ap-half top"><span class="ap-num" id="n-${c}-${mi}-ap">${get(currentDept,c,mi,'ap')}</span><div class="ap-vcol"><button class="ap-bp" onclick="bump(${c},${mi},'ap',1)">＋</button><button class="ap-bm" onclick="bump(${c},${mi},'ap',-1)">－</button></div></div>
+          <div class="ap-half bot"><span class="ap-num b" id="n-${c}-${mi}-zoom">${get(currentDept,c,mi,'zoom')}</span><div class="ap-vcol"><button class="ap-bp" onclick="bump(${c},${mi},'zoom',1)">＋</button><button class="ap-bm" onclick="bump(${c},${mi},'zoom',-1)">－</button></div></div>
+        </div>
+      </div>`).join('');
+    div.innerHTML=`
+      <div class="course-header">${course.name}</div>
+      <div class="course-meta">目標 <span>${course.target}本</span></div>
+      <div class="col-hd"><div>Name</div><div>契約</div><div>新規</div><div>解約</div><div class="col-hd-ap"><div class="ap-top">対面 AP</div><div class="ap-bot">ZOOM</div></div></div>
+      <div class="members">${rows}</div>`;
+    wrap.appendChild(div);
+  });
+  const fc=document.getElementById('footer-courses');fc.innerHTML='';
+  s.courses.forEach((_,c)=>{
+    const div=document.createElement('div');div.className='f-course';
+    div.innerHTML=`<div class="f-name-cell">集計</div><div class="f-cell" id="f-keiyaku-${c}">${cSum(currentDept,c,'keiyaku')}</div><div class="f-cell g" id="f-shinki-${c}">${cSum(currentDept,c,'shinki')}</div><div class="f-cell r" id="f-kaiyaku-${c}">${cSum(currentDept,c,'kaiyaku')}</div><div class="f-cell" id="fap-${c}">${cSum(currentDept,c,'ap')+cSum(currentDept,c,'zoom')}</div>`;
+    fc.appendChild(div);
+  });
+}
+
+window.openSettings=function(){modalDept=currentDept;buildModal();document.getElementById('modal-overlay').classList.add('open');};
+window.closeSettings=function(){document.getElementById('modal-overlay').classList.remove('open');};
+function buildModal(){
+  tempMembers={};const s=settings[modalDept];
+  s.courses.forEach((c,ci)=>{tempMembers[ci]=c.members.map(m=>({...m}));});
+  document.getElementById('modal-body').innerHTML=`
+    <div id="modal-dept-tabs">${settings.map((d,i)=>`<div class="mdtab${i===modalDept?' active':''}" onclick="switchModalDept(${i})">${d.deptName}</div>`).join('')}</div>
+    <div class="s-section"><div class="s-title">基本設定 — ${s.deptName}</div>
+      <div class="s-row"><label>月（表示）</label><input type="text" id="s-month" class="wide" value="${s.month}"></div>
+      <div class="s-row"><label>全体目標本数</label><input type="number" id="s-total" value="${s.totalGoal}" min="0" step="0.5"></div>
+      <div class="s-row"><label>新規目標本数</label><input type="number" id="s-shinki" value="${s.shinkiGoal}" min="0" step="0.5"></div>
+      <div class="s-row"><label>部長名</label><input type="text" id="s-bucho" class="wide" value="${s.bucho}"></div>
+    </div>
+    <div class="s-section"><div class="s-title">進捗の微調整 <span class="s-note">— 0.5換算など特殊契約の加算</span></div>
+      <div class="s-row"><label>全体進捗に加算</label><input type="number" id="s-totaladj" value="${s.totalAdj||0}" step="0.5"><span class="s-note">本</span></div>
+      <div class="s-row"><label>新規進捗に加算</label><input type="number" id="s-shinkiadj" value="${s.shinkiAdj||0}" step="0.5"><span class="s-note">本</span></div>
+    </div>
+    <div class="s-section"><div class="s-title">役職カラー凡例</div>
+      <div style="display:flex;gap:0.6em;flex-wrap:wrap;margin-bottom:0.4em">${ROLES.map(r=>`<span style="background:${r.bg};color:#fff;padding:0.22em 0.9em;border-radius:5px;font-size:0.85em;font-weight:700">${r.label}</span>`).join('')}</div>
+    </div>
+    <div class="s-section"><div class="s-title">課・メンバー設定</div><div id="courses-edit"></div></div>`;
+  const ceDiv=document.getElementById('courses-edit');
+  s.courses.forEach((course,ci)=>{
+    const block=document.createElement('div');block.className='course-edit-block';
+    block.innerHTML=`<div class="course-edit-head"><span>課名：</span><input class="cn" type="text" id="ce-name-${ci}" value="${course.name}"><span>　目標：</span><input class="ct" type="number" id="ce-target-${ci}" value="${course.target}" min="0"><span>本</span></div><div class="member-list" id="mlist-${ci}"></div>`;
+    ceDiv.appendChild(block);renderMemberList(ci,tempMembers[ci]);
+  });
+}
+function renderMemberList(ci,members){
+  const ml=document.getElementById('mlist-'+ci);ml.innerHTML='';
+  members.forEach((m,mi)=>{
+    const r=ROLE_MAP[m.role]||ROLE_MAP['shain'];
+    const row=document.createElement('div');row.className='member-edit-row';
+    row.innerHTML=`<input type="text" id="me-name-${ci}-${mi}" value="${m.name}" placeholder="氏名"><select id="me-role-${ci}-${mi}" onchange="updateRolePreview(${ci},${mi})">${ROLES.map(role=>`<option value="${role.key}"${m.role===role.key?' selected':''}>${role.label}</option>`).join('')}</select><span class="role-preview" id="rp-${ci}-${mi}" style="background:${r.bg};color:#fff">${r.label}</span><button class="btn-del-member" onclick="delMember(${ci},${mi})">削除</button>`;
+    ml.appendChild(row);
+  });
+  const addBtn=document.createElement('button');addBtn.className='btn-add-member';addBtn.textContent='＋ メンバー追加';addBtn.onclick=()=>addMember(ci);ml.appendChild(addBtn);
+}
+window.updateRolePreview=function(ci,mi){const sel=document.getElementById(`me-role-${ci}-${mi}`);const prev=document.getElementById(`rp-${ci}-${mi}`);if(!sel||!prev)return;const r=ROLE_MAP[sel.value]||ROLE_MAP['shain'];prev.textContent=r.label;prev.style.background=r.bg;};
+window.switchModalDept=function(d){collectModalInputs();modalDept=d;buildModal();};
+function syncTemp(ci){if(!tempMembers[ci])return;tempMembers[ci].forEach((_,mi)=>{const n=document.getElementById(`me-name-${ci}-${mi}`);const r=document.getElementById(`me-role-${ci}-${mi}`);if(n)tempMembers[ci][mi].name=n.value;if(r)tempMembers[ci][mi].role=r.value;});}
+function collectModalInputs(){
+  const s=settings[modalDept];
+  s.month=document.getElementById('s-month')?.value||s.month;
+  s.totalGoal=parseFloat(document.getElementById('s-total')?.value)||0;
+  s.shinkiGoal=parseFloat(document.getElementById('s-shinki')?.value)||0;
+  s.bucho=document.getElementById('s-bucho')?.value||s.bucho;
+  s.totalAdj=parseFloat(document.getElementById('s-totaladj')?.value)||0;
+  s.shinkiAdj=parseFloat(document.getElementById('s-shinkiadj')?.value)||0;
+  s.courses.forEach((_,ci)=>{s.courses[ci].name=document.getElementById(`ce-name-${ci}`)?.value||s.courses[ci].name;s.courses[ci].target=parseInt(document.getElementById(`ce-target-${ci}`)?.value)||0;syncTemp(ci);s.courses[ci].members=(tempMembers[ci]||[]).filter(m=>m.name.trim()!=='');});
+}
+window.delMember=function(ci,mi){syncTemp(ci);tempMembers[ci].splice(mi,1);renderMemberList(ci,tempMembers[ci]);};
+window.addMember=function(ci){syncTemp(ci);tempMembers[ci].push({name:'',role:'shain'});renderMemberList(ci,tempMembers[ci]);setTimeout(()=>{const el=document.getElementById(`me-name-${ci}-${tempMembers[ci].length-1}`);if(el)el.focus();},50);};
+window.saveSettings=function(){collectModalInputs();saveSettingsStore();closeSettings();renderBoard();};
+
+renderBoard();
+</script>
+</body>
+</html>
